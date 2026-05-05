@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MineGuard — Employee Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="bg-animation"></div>
+  <div class="dashboard">
+    <!-- Topbar -->
+    <nav class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-logo"><span>⛑️</span><span class="logo-text">MineGuard</span></div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="user-avatar" id="empAvatar">RK</div>
+          <div><strong id="empName">Employee</strong><br><small id="empId" class="mono" style="color:var(--text-muted)">EMP001</small></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-status"><span class="status-dot" id="deviceStatusDot"></span><span id="deviceStatusText">Waiting for ESP</span></div>
+        <span class="topbar-time" id="clockTime">--:--:--</span>
+        <button class="btn-sos" onclick="triggerSOS()">🚨 SOS</button>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </nav>
+
+    <div class="dashboard-content">
+      <!-- Vital Signs -->
+      <div class="section-header"><span class="section-icon">❤️</span><h2>Vital Signs</h2><div class="section-line"></div></div>
+      <div class="card-grid cols-2">
+        <!-- Heart Rate -->
+        <div class="card status-safe">
+          <div class="card-header">
+            <div class="card-title"><h3>Heart Rate</h3><span class="card-sensor">MAX30102</span></div>
+            <span class="status-badge warning" id="hrBadge"><span class="badge-dot"></span>Waiting</span>
+          </div>
+          <div class="gauge-container">
+            <div class="gauge-ring" id="hrGauge">
+              <svg viewBox="0 0 100 100"><circle class="gauge-bg" cx="50" cy="50" r="42"/><circle class="gauge-fill" cx="50" cy="50" r="42" stroke="#22c55e"/></svg>
+              <div class="gauge-value"><span class="gv-num" id="hrValue">--</span><span class="gv-unit">bpm</span></div>
+            </div>
+            <div class="gauge-info">
+              <div class="gi-label">Normal Range</div>
+              <div class="gi-range">60 – 100 bpm</div>
+              <div class="sparkline-container"><svg class="sparkline" id="hrSparkline"></svg></div>
+            </div>
+          </div>
+        </div>
+        <!-- SpO2 -->
+        <div class="card status-safe">
+          <div class="card-header">
+            <div class="card-title"><h3>Blood Oxygen (SpO₂)</h3><span class="card-sensor">MAX30102</span></div>
+            <span class="status-badge warning" id="spo2Badge"><span class="badge-dot"></span>Waiting</span>
+          </div>
+          <div class="gauge-container">
+            <div class="gauge-ring" id="spo2Gauge">
+              <svg viewBox="0 0 100 100"><circle class="gauge-bg" cx="50" cy="50" r="42"/><circle class="gauge-fill" cx="50" cy="50" r="42" stroke="#3b82f6"/></svg>
+              <div class="gauge-value"><span class="gv-num" id="spo2Value">--</span><span class="gv-unit">%</span></div>
+            </div>
+            <div class="gauge-info">
+              <div class="gi-label">Normal Range</div>
+              <div class="gi-range">95 – 100%</div>
+              <div class="sparkline-container"><svg class="sparkline" id="spo2Sparkline"></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gas Sensors -->
+      <div class="section-header"><span class="section-icon">💨</span><h2>Gas Detection</h2><div class="section-line"></div></div>
+      <div class="card-grid cols-5">
+        <div class="card"><div class="card-header"><div class="card-title"><span class="card-icon">🏭</span><h3>CO</h3><span class="card-sensor">MQ-7</span></div><span class="status-badge warning" id="coBadge"><span class="badge-dot"></span>Waiting</span></div><div class="value-display"><span class="value-big value-safe" id="coValue">--</span><span class="value-unit">ppm</span></div><div class="value-sub">Safe: &lt; 25 ppm</div><div class="progress-bar"><div class="progress-fill safe" id="coBar" style="width:0%"></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><span class="card-icon">🔥</span><h3>CH₄</h3><span class="card-sensor">MQ-4</span></div><span class="status-badge warning" id="ch4Badge"><span class="badge-dot"></span>Waiting</span></div><div class="value-display"><span class="value-big value-safe" id="ch4Value">--</span><span class="value-unit">%</span></div><div class="value-sub">Safe: &lt; 1.0%</div><div class="progress-bar"><div class="progress-fill safe" id="ch4Bar" style="width:0%"></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><span class="card-icon">☠️</span><h3>H₂S</h3><span class="card-sensor">MQ-136</span></div><span class="status-badge warning" id="h2sBadge"><span class="badge-dot"></span>Waiting</span></div><div class="value-display"><span class="value-big value-safe" id="h2sValue">--</span><span class="value-unit">ppm</span></div><div class="value-sub">Safe: &lt; 10 ppm</div><div class="progress-bar"><div class="progress-fill safe" id="h2sBar" style="width:0%"></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><span class="card-icon">🫁</span><h3>O₂</h3><span class="card-sensor">Electrochemical</span></div><span class="status-badge warning" id="o2Badge"><span class="badge-dot"></span>Waiting</span></div><div class="value-display"><span class="value-big value-safe" id="o2Value">--</span><span class="value-unit">%</span></div><div class="value-sub">Safe: 19.5 – 23.5%</div><div class="progress-bar"><div class="progress-fill safe" id="o2Bar" style="width:0%"></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><span class="card-icon">💨</span><h3>Smoke</h3><span class="card-sensor">MQ-2</span></div><span class="status-badge warning" id="smokeBadge"><span class="badge-dot"></span>Waiting</span></div><div class="value-display"><span class="value-big value-safe" id="smokeValue">--</span><span class="value-unit">%</span></div><div class="value-sub">Smoke/LPG Level</div><div class="progress-bar"><div class="progress-fill safe" id="smokeBar" style="width:0%"></div></div></div>
+      </div>
+
+      <!-- Motion & Environment -->
+      <div class="section-header"><span class="section-icon">🌡️</span><h2>Motion & Environment</h2><div class="section-line"></div></div>
+      <div class="card-grid cols-3">
+        <div class="card status-warning" id="fallCard">
+          <div class="card-header"><div class="card-title"><span class="card-icon">🏃</span><h3>Fall Detection</h3><span class="card-sensor">MPU6050</span></div></div>
+          <div class="value-display"><span class="value-big value-safe" id="fallStatus">Waiting</span></div>
+          <div class="value-sub mono" id="accelData">X:-- Y:-- Z:--</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="card-icon">🌡️</span><h3>Temperature</h3><span class="card-sensor">BME280</span></div></div>
+          <div class="value-display"><span class="value-big value-safe" id="tempValue">--</span><span class="value-unit">°C</span></div>
+          <div class="value-sub">Mine ambient temperature</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="card-icon">💧</span><h3>Humidity</h3><span class="card-sensor">BME280</span></div></div>
+          <div class="value-display"><span class="value-big value-accent" id="humidityValue">--</span><span class="value-unit">%</span></div>
+          <div class="value-sub">Relative humidity</div>
+        </div>
+      </div>
+
+      <!-- Location & Depth -->
+      <div class="section-header"><span class="section-icon">📍</span><h2>Location & Depth</h2><div class="section-line"></div></div>
+      <div class="card-grid cols-3">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="card-icon">📏</span><h3>Depth</h3><span class="card-sensor">BMP280</span></div></div>
+          <div class="value-display"><span class="value-big value-info" id="depthValue">--</span><span class="value-unit">m</span></div>
+          <div class="value-sub">Relative to surface</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="card-icon">🌀</span><h3>Pressure</h3><span class="card-sensor">BMP280</span></div></div>
+          <div class="value-display"><span class="value-big value-safe" id="pressureValue">--</span><span class="value-unit">hPa</span></div>
+          <div class="value-sub">Barometric pressure</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><span class="card-icon">📍</span><h3>Location</h3><span class="card-sensor">UWB/LoRa</span></div></div>
+          <div class="value-display"><span class="value-big value-accent" id="locationZone" style="font-size:20px">--</span></div>
+          <div class="value-sub">Underground positioning</div>
+        </div>
+      </div>
+
+      <!-- Alert Log -->
+      <div class="section-header"><span class="section-icon">🔔</span><h2>Alert Log</h2><div class="section-line"></div></div>
+      <div class="alert-log">
+        <div class="alert-log-header"><h3>🔔 Recent Alerts <span class="alert-count" id="alertCount">0</span></h3></div>
+        <div id="alertList">
+          <div class="alert-item"><span class="alert-severity">🟢</span><div class="alert-content"><div class="alert-msg">Waiting for ESP sensor data.</div><div class="alert-meta">LIVE</div></div><span class="alert-time">--:--:--</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS Modal -->
+  <div class="modal-overlay sos-modal" id="sosModal">
+    <div class="modal">
+      <div class="modal-body" style="padding:40px;text-align:center">
+        <div class="sos-icon-big">🚨</div>
+        <h2 style="color:var(--danger);font-size:24px;font-weight:800">SOS EMERGENCY ACTIVATED</h2>
+        <p style="color:var(--text-secondary);margin:12px 0 24px">Emergency signal has been sent to all supervisors.<br>Help is on the way. Stay calm.</p>
+        <button class="btn-sos-cancel" onclick="cancelSOS()">Cancel SOS</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/employee.js?v=real-esp-2"></script>
+</body>
+</html>

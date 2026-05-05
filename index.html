@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MineGuard - IoT-Powered Miner Safety Monitoring System. Real-time sensor tracking for underground mining safety.">
+  <title>MineGuard — Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-animation"></div>
+  <div class="bg-grid"></div>
+
+  <!-- Login Card -->
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Logo -->
+      <div class="login-logo">
+        <span class="logo-icon">⛑️</span>
+        <h1>MineGuard</h1>
+        <p class="tagline">IoT-Powered Miner Safety System</p>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="role-selection" id="roleSelection">
+        <div class="role-card" id="roleSupervisor" onclick="selectRole('supervisor')">
+          <span class="role-icon">🛡️</span>
+          <span class="role-title">Supervisor</span>
+          <span class="role-desc">Monitor all miners</span>
+        </div>
+        <div class="role-card" id="roleEmployee" onclick="selectRole('employee')">
+          <span class="role-icon">⛏️</span>
+          <span class="role-title">Employee</span>
+          <span class="role-desc">View your device data</span>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <div class="login-form" id="loginForm">
+        <div class="login-error" id="loginError">
+          <span>⚠️</span>
+          <span id="loginErrorMsg">Invalid credentials</span>
+        </div>
+
+        <div class="form-group">
+          <label for="loginId">ID</label>
+          <input type="text" id="loginId" placeholder="Enter your ID" autocomplete="off">
+          <p class="form-hint" id="idHint"></p>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter password">
+          <p class="form-hint" id="passHint"></p>
+        </div>
+
+        <button class="login-btn" id="loginBtn" onclick="handleLogin()">
+          🔐 Sign In
+        </button>
+      </div>
+
+      <!-- Sensor Strip -->
+      <div class="sensor-strip">
+        <h4>Integrated Sensor Modules</h4>
+        <div class="sensor-icons">
+          <span class="sensor-tag">❤️ MAX30102</span>
+          <span class="sensor-tag">🏃 MPU6050</span>
+          <span class="sensor-tag">💨 MQ-7</span>
+          <span class="sensor-tag">🔥 MQ-4</span>
+          <span class="sensor-tag">☠️ MQ-136</span>
+          <span class="sensor-tag">💨 MQ-2</span>
+          <span class="sensor-tag">🌡️ BME280</span>
+          <span class="sensor-tag">📏 BMP280</span>
+          <span class="sensor-tag">📍 UWB/LoRa</span>
+          <span class="sensor-tag">🧠 ESP32</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    let selectedRole = null;
+
+    // Check if already logged in
+    (function() {
+      const session = getSession();
+      if (session) {
+        window.location.href = session.role === 'supervisor' ? 'supervisor.html' : 'employee.html';
+      }
+    })();
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('roleSupervisor').classList.toggle('active', role === 'supervisor');
+      document.getElementById('roleEmployee').classList.toggle('active', role === 'employee');
+      
+      const form = document.getElementById('loginForm');
+      form.classList.add('visible');
+      
+      // Update hints
+      if (role === 'supervisor') {
+        document.getElementById('idHint').textContent = 'Demo: SUP001';
+        document.getElementById('passHint').textContent = 'Demo: admin123';
+        document.getElementById('loginId').placeholder = 'e.g. SUP001';
+      } else {
+        document.getElementById('idHint').textContent = 'Demo: EMP001';
+        document.getElementById('passHint').textContent = 'Demo: miner123';
+        document.getElementById('loginId').placeholder = 'e.g. EMP001';
+      }
+
+      document.getElementById('loginError').classList.remove('visible');
+      document.getElementById('loginId').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginId').focus();
+    }
+
+    function handleLogin() {
+      if (!selectedRole) return;
+      const id = document.getElementById('loginId').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!id || !password) {
+        showError('Please fill in both fields');
+        return;
+      }
+
+      const result = login(selectedRole, id, password);
+      if (result.success) {
+        document.querySelector('.login-card').style.animation = 'cardAppear 0.4s ease-out reverse';
+        setTimeout(() => {
+          window.location.href = selectedRole === 'supervisor' ? 'supervisor.html' : 'employee.html';
+        }, 350);
+      } else {
+        showError(result.message);
+      }
+    }
+
+    function showError(msg) {
+      const errEl = document.getElementById('loginError');
+      document.getElementById('loginErrorMsg').textContent = msg;
+      errEl.classList.remove('visible');
+      void errEl.offsetWidth; // trigger reflow for animation
+      errEl.classList.add('visible');
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && selectedRole) handleLogin();
+    });
+  </script>
+</body>
+</html>

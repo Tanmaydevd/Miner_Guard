@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-deep: #0a0e17;
+  --bg-surface: #111827;
+  --bg-elevated: #1a2236;
+  --bg-card: rgba(17, 24, 39, 0.7);
+  --bg-glass: rgba(26, 34, 54, 0.6);
+  --bg-input: rgba(15, 23, 42, 0.8);
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-light: rgba(255,255,255,0.1);
+  --border-accent: rgba(0, 229, 160, 0.3);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-accent: #00e5a0;
+  --accent: #00e5a0;
+  --accent-glow: rgba(0, 229, 160, 0.15);
+  --accent-hover: #00cc8e;
+  --safe: #22c55e;
+  --safe-bg: rgba(34, 197, 94, 0.1);
+  --safe-border: rgba(34, 197, 94, 0.3);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.1);
+  --warning-border: rgba(251, 191, 36, 0.3);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-border: rgba(239, 68, 68, 0.3);
+  --info: #3b82f6;
+  --info-bg: rgba(59, 130, 246, 0.1);
+  --info-border: rgba(59, 130, 246, 0.3);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px rgba(0, 229, 160, 0.15);
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+body { font-family:'Inter',sans-serif; background:var(--bg-deep); color:var(--text-primary); line-height:1.6; min-height:100vh; overflow-x:hidden; }
+a { color:var(--accent); text-decoration:none; }
+button, input { font-family:inherit; outline:none; border:none; }
+button { cursor:pointer; }
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--bg-deep); }
+::-webkit-scrollbar-thumb { background:var(--bg-elevated); border-radius:3px; }
+.mono { font-family:'JetBrains Mono',monospace; }

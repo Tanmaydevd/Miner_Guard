@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MineGuard — Supervisor Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    /* SOS miner card */
+    .miner-card.status-sos {
+      border-color: var(--danger-border);
+      animation: sos-card 1s ease-in-out infinite;
+    }
+    @keyframes sos-card {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); border-color: var(--danger-border); }
+      50%      { box-shadow: 0 0 20px 4px rgba(239,68,68,0.25); border-color: var(--danger); }
+    }
+    .miner-avatar.sos   { background: linear-gradient(135deg,#ef4444,#dc2626); }
+    .miner-avatar.offline { background: var(--bg-elevated); color: var(--text-muted); }
+    .miner-card.status-offline { opacity: 0.55; }
+
+    /* summary card accent borders */
+    .summary-card.s-total    { border-left: 3px solid var(--info); }
+    .summary-card.s-online   { border-left: 3px solid var(--safe); }
+    .summary-card.s-warn     { border-left: 3px solid var(--warning); }
+    .summary-card.s-critical { border-left: 3px solid var(--danger); }
+    .summary-info h3.col-info    { color: var(--info); }
+    .summary-info h3.col-safe    { color: var(--safe); }
+    .summary-info h3.col-warn    { color: var(--warning); }
+    .summary-info h3.col-danger  { color: var(--danger); }
+
+    /* status pill on miner cards */
+    .status-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 9px; border-radius:var(--radius-full);
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+    }
+    .status-pill.ok      { background:var(--safe-bg);    color:var(--safe);    border:1px solid var(--safe-border); }
+    .status-pill.warn    { background:var(--warning-bg); color:var(--warning); border:1px solid var(--warning-border); }
+    .status-pill.danger  { background:var(--danger-bg);  color:var(--danger);  border:1px solid var(--danger-border); }
+    .status-pill.sos     { background:var(--danger-bg);  color:var(--danger);  border:1px solid var(--danger); animation:sos-badge 0.8s ease infinite alternate; }
+    .status-pill.offline { background:var(--bg-input);   color:var(--text-muted); border:1px solid var(--border-subtle); }
+    @keyframes sos-badge { from{opacity:1;} to{opacity:.5;} }
+    .pill-dot { width:6px;height:6px;border-radius:50%;background:currentColor; }
+
+    /* detail modal sensor grid */
+    .sensor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
+    .sensor-tile {
+      background:var(--bg-input); border:1px solid var(--border-subtle);
+      border-radius:var(--radius-md); padding:14px 16px;
+    }
+    .sensor-tile .st-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .sensor-tile .st-value { font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; }
+    .sensor-tile .st-unit  { font-size:12px; color:var(--text-muted); margin-left:3px; }
+    .sensor-tile.t-ok      { border-left:3px solid var(--safe);    }
+    .sensor-tile.t-warn    { border-left:3px solid var(--warning);  }
+    .sensor-tile.t-danger  { border-left:3px solid var(--danger);   }
+    .sensor-tile.t-info    { border-left:3px solid var(--info);     }
+
+    /* alert items in modal */
+    .modal-alerts { margin-top:20px; }
+    .modal-alert { padding:10px 14px; border-radius:var(--radius-md); margin-bottom:8px; display:flex; gap:10px; font-size:13px; }
+    .modal-alert.ok   { background:var(--safe-bg);    border:1px solid var(--safe-border);    color:var(--safe); }
+    .modal-alert.warn { background:var(--warning-bg); border:1px solid var(--warning-border); color:var(--warning); }
+    .modal-alert.crit { background:var(--danger-bg);  border:1px solid var(--danger-border);  color:var(--danger); }
+    .modal-alert .ma-ts { margin-left:auto; font-size:11px; font-family:'JetBrains Mono',monospace; opacity:.7; }
+
+    /* last-updated bar */
+    .refresh-bar { font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:8px; }
+    .refresh-dot { width:7px; height:7px; border-radius:50%; background:var(--safe); animation:pulse-dot 2s ease infinite; }
+
+    /* empty state */
+    .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); font-size:15px; }
+    .empty-state .es-icon { font-size:48px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <div class="bg-animation"></div>
+  <div class="dashboard">
+
+    <!-- Topbar -->
+    <nav class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-logo"><span>⛑️</span><span class="logo-text">MineGuard</span></div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">
+          <div class="user-avatar" id="supAvatar">AV</div>
+          <div>
+            <strong id="supName">Supervisor</strong><br>
+            <small id="supId" class="mono" style="color:var(--text-muted)">SUP001</small>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="refresh-bar">
+          <div class="refresh-dot" id="refreshDot"></div>
+          <span id="lastUpdated">Connecting…</span>
+        </div>
+        <span class="topbar-time" id="clockTime">--:--:--</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </nav>
+
+    <div class="dashboard-content">
+
+      <!-- Summary -->
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card s-total">
+          <div class="summary-icon total">👷</div>
+          <div class="summary-info"><h3 id="cntTotal" class="col-info">—</h3><p>Total Miners</p></div>
+        </div>
+        <div class="summary-card s-online">
+          <div class="summary-icon online">✅</div>
+          <div class="summary-info"><h3 id="cntOk" class="col-safe">—</h3><p>Safe / Online</p></div>
+        </div>
+        <div class="summary-card s-warn">
+          <div class="summary-icon warnings">⚠️</div>
+          <div class="summary-info"><h3 id="cntWarn" class="col-warn">—</h3><p>Warnings</p></div>
+        </div>
+        <div class="summary-card s-critical">
+          <div class="summary-icon critical">🚨</div>
+          <div class="summary-info"><h3 id="cntCrit" class="col-danger">—</h3><p>Critical / SOS</p></div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <input class="search-input" id="searchBox" type="text" placeholder="🔍  Search miner name or ID…" oninput="renderMiners()">
+        <button class="filter-btn active" data-filter="all"     onclick="setFilter(this)">All</button>
+        <button class="filter-btn"        data-filter="ok"      onclick="setFilter(this)">Safe</button>
+        <button class="filter-btn"        data-filter="warn"    onclick="setFilter(this)">Warning</button>
+        <button class="filter-btn"        data-filter="danger"  onclick="setFilter(this)">Danger</button>
+        <button class="filter-btn"        data-filter="sos"     onclick="setFilter(this)">SOS</button>
+        <button class="filter-btn"        data-filter="offline" onclick="setFilter(this)">Offline</button>
+      </div>
+
+      <!-- Miners grid -->
+      <div class="miners-grid" id="minersGrid">
+        <div class="empty-state"><div class="es-icon">📡</div>Connecting to backend…</div>
+      </div>
+
+      <!-- Alert Log -->
+      <div class="section-header" style="margin-top:32px">
+        <span class="section-icon">🔔</span><h2>Alert Log</h2><div class="section-line"></div>
+      </div>
+      <div class="alert-log">
+        <div class="alert-log-header">
+          <h3>🔔 Live Alerts <span class="alert-count" id="alertCount">0</span></h3>
+          <span style="font-size:12px;color:var(--text-muted)">most recent first</span>
+        </div>
+        <div id="alertList">
+          <div class="alert-item">
+            <span class="alert-severity">🟢</span>
+            <div class="alert-content">
+              <div class="alert-msg">Waiting for data…</div>
+              <div class="alert-meta">SYSTEM</div>
+            </div>
+            <span class="alert-time">--:--:--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Miner Details</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    // ── Auth ──────────────────────────────────────────────────
+    const session = requireAuth('supervisor');
+
+    function requireAuth(role) {
+      const raw = sessionStorage.getItem('mineguard_session');
+      if (!raw) { window.location.href = 'index.html'; return null; }
+      try {
+        const s = JSON.parse(raw);
+        if (s.role !== role) { window.location.href = 'index.html'; return null; }
+        return s;
+      } catch { window.location.href = 'index.html'; return null; }
+    }
+
+    if (session) {
+      document.getElementById('supName').textContent = session.name;
+      document.getElementById('supId').textContent   = session.id;
+      document.getElementById('supAvatar').textContent = session.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    }
+
+    // ── State ─────────────────────────────────────────────────
+    let allMiners  = [];
+    let activeFilter = 'all';
+    let globalAlerts = [];   // [{miner, level, msg, ts}]
+
+    // ── Clock ─────────────────────────────────────────────────
+    function tickClock() {
+      document.getElementById('clockTime').textContent =
+        new Date().toLocaleTimeString('en-GB');
+    }
+    tickClock(); setInterval(tickClock, 1000);
+
+    // ── Fetch loop ────────────────────────────────────────────
+    async function fetchData() {
+      try {
+        const res = await fetch('/devices');
+        if (!res.ok) throw new Error(res.status);
+        const { miners, counts } = await res.json();
+        allMiners = miners;
+        updateSummary(counts, miners.length);
+        collectAlerts(miners);
+        renderMiners();
+        renderAlertLog();
+        document.getElementById('lastUpdated').textContent =
+          'Updated ' + new Date().toLocaleTimeString('en-GB');
+        document.getElementById('refreshDot').style.background = 'var(--safe)';
+      } catch {
+        document.getElementById('lastUpdated').textContent = 'Backend offline';
+        document.getElementById('refreshDot').style.background = 'var(--danger)';
+      }
+    }
+    fetchData();
+    setInterval(fetchData, 2000);
+
+    // ── Summary cards ─────────────────────────────────────────
+    function updateSummary(counts, total) {
+      document.getElementById('cntTotal').textContent = total;
+      document.getElementById('cntOk').textContent    = (counts.ok   || 0);
+      document.getElementById('cntWarn').textContent  = (counts.warn || 0);
+      document.getElementById('cntCrit').textContent  = (counts.danger||0) + (counts.sos||0);
+    }
+
+    // ── Alert collection ──────────────────────────────────────
+    function collectAlerts(miners) {
+      const fresh = [];
+      for (const m of miners) {
+        for (const a of (m.alerts || [])) {
+          fresh.push({ miner: m.name, id: m.id, level: a.l, msg: a.m, ts: a.ts });
+        }
+      }
+      fresh.sort((a,b) => b.ts.localeCompare(a.ts));
+      globalAlerts = fresh.slice(0, 60);
+    }
+
+    function renderAlertLog() {
+      const list = document.getElementById('alertList');
+      if (!globalAlerts.length) return;
+      const icon = { ok:'🟢', warn:'🟡', crit:'🔴' };
+      list.innerHTML = globalAlerts.map(a => `
+        <div class="alert-item">
+          <span class="alert-severity">${icon[a.level]||'⚪'}</span>
+          <div class="alert-content">
+            <div class="alert-msg">${escHtml(a.msg)}</div>
+            <div class="alert-meta">${escHtml(a.id)} · ${escHtml(a.miner)}</div>
+          </div>
+          <span class="alert-time">${a.ts.slice(11,19)}</span>
+        </div>`).join('');
+      document.getElementById('alertCount').textContent = globalAlerts.length;
+    }
+
+    // ── Filter ────────────────────────────────────────────────
+    function setFilter(btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderMiners();
+    }
+
+    // ── Miner cards ───────────────────────────────────────────
+    function renderMiners() {
+      const q  = document.getElementById('searchBox').value.trim().toLowerCase();
+      const grid = document.getElementById('minersGrid');
+
+      let list = allMiners.filter(m => {
+        if (activeFilter !== 'all' && m.status !== activeFilter) return false;
+        if (q && !m.name.toLowerCase().includes(q) && !m.id.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      // sort: sos > danger > warn > ok > offline
+      const order = {sos:0, danger:1, warn:2, ok:3, offline:4};
+      list.sort((a,b) => (order[a.status]??5) - (order[b.status]??5));
+
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="es-icon">🔍</div>No miners match the filter.</div>';
+        return;
+      }
+
+      grid.innerHTML = list.map(m => minerCardHTML(m)).join('');
+    }
+
+    function minerCardHTML(m) {
+      const d = m.data || {};
+      const st = m.status;           // ok | warn | danger | sos | offline
+      const avatarCls = st === 'ok' ? 'safe' : (st === 'warn' ? 'warning' : (st === 'offline' ? 'offline' : 'sos'));
+      const initials = m.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+      const pillLabel = st === 'ok' ? 'Safe' : st === 'warn' ? 'Warning' :
+                        st === 'danger' ? 'Danger' : st === 'sos' ? '🚨 SOS' : 'Offline';
+      const pillCls = st === 'ok' ? 'ok' : st === 'warn' ? 'warn' :
+                      (st === 'danger' || st === 'sos') ? (st === 'sos' ? 'sos' : 'danger') : 'offline';
+
+      const hr  = d.hr   != null ? d.hr   + ' bpm' : '—';
+      const spo = d.spo2 != null ? d.spo2 + '%'    : '—';
+      const co  = d.co   != null ? d.co   + ' ppm' : '—';
+      const o2  = d.o2   != null ? d.o2   + '%'    : '—';
+
+      const coWarn  = (d.co   != null && d.co  > 50) ? 'value-danger' : (d.co  > 35 ? 'value-warning' : 'value-safe');
+      const spo2Col = (d.spo2 != null && d.spo2 < 92) ? 'value-danger' : (d.spo2 < 95 ? 'value-warning' : 'value-safe');
+
+      return `
+      <div class="miner-card status-${st}" onclick="openDetail('${escAttr(m.id)}')">
+        <div class="miner-card-header">
+          <div class="miner-avatar ${avatarCls}">${initials}</div>
+          <div class="miner-info">
+            <h4>${escHtml(m.name)}</h4>
+            <div class="miner-id mono">${escHtml(m.id)}</div>
+          </div>
+          <div class="miner-card-badge"><span class="status-pill ${pillCls}"><span class="pill-dot"></span>${pillLabel}</span></div>
+        </div>
+        <div class="miner-metrics">
+          <div class="miner-metric"><span class="mm-icon">❤️</span><span class="mm-label">HR</span><span class="mm-value">${hr}</span></div>
+          <div class="miner-metric"><span class="mm-icon">🫁</span><span class="mm-label">SpO₂</span><span class="mm-value ${spo2Col}">${spo}</span></div>
+          <div class="miner-metric"><span class="mm-icon">💨</span><span class="mm-label">CO</span><span class="mm-value ${coWarn}">${co}</span></div>
+          <div class="miner-metric"><span class="mm-icon">🏭</span><span class="mm-label">O₂</span><span class="mm-value">${o2}</span></div>
+        </div>
+        <div class="miner-card-footer">
+          <span class="miner-zone">📍 ${escHtml(m.zone)} · ${escHtml(m.level)}</span>
+          <span class="miner-updated">${m.last_seen ? m.last_seen.slice(11,19) : '--'}</span>
+        </div>
+      </div>`;
+    }
+
+    // ── Detail Modal ──────────────────────────────────────────
+    function openDetail(id) {
+      const m = allMiners.find(x => x.id === id);
+      if (!m) return;
+      const d = m.data || {};
+
+      document.getElementById('modalTitle').innerHTML =
+        `⛑️ ${escHtml(m.name)} <span style="font-size:14px;color:var(--text-muted);font-weight:400">${escHtml(m.id)}</span>`;
+
+      const tiles = [
+        { label:'Heart Rate',    val: d.hr,       unit:'bpm',  cls: hrClass(d.hr)    },
+        { label:'SpO₂',          val: d.spo2,      unit:'%',    cls: spo2Class(d.spo2)},
+        { label:'Body Temp',     val: d.bodytemp,  unit:'°C',   cls: btClass(d.bodytemp)},
+        { label:'CO',            val: d.co,        unit:'ppm',  cls: coClass(d.co)   },
+        { label:'H₂S',           val: d.h2s,       unit:'ppm',  cls: h2sClass(d.h2s) },
+        { label:'CH₄',           val: d.ch4,       unit:'%LEL', cls: ch4Class(d.ch4) },
+        { label:'O₂ Atm',        val: d.o2,        unit:'%',    cls: o2Class(d.o2)   },
+        { label:'Smoke',         val: d.smoke,     unit:'ppm',  cls: smokeClass(d.smoke)},
+        { label:'Air Temp',      val: d.airtemp,   unit:'°C',   cls: atClass(d.airtemp)},
+        { label:'Humidity',      val: d.humidity,  unit:'%',    cls: 't-info'        },
+        { label:'Pressure',      val: d.pressure,  unit:'hPa',  cls: 't-info'        },
+        { label:'Depth',         val: d.depth,     unit:'m',    cls: 't-info'        },
+      ];
+
+      const flags = [
+        { label:'Fall',  val: d.fall,  danger:true  },
+        { label:'Flame', val: d.flame, danger:true  },
+        { label:'SOS',   val: d.sos,   danger:true  },
+      ];
+
+      const tileHTML = tiles.map(t => `
+        <div class="sensor-tile ${t.cls}">
+          <div class="st-label">${t.label}</div>
+          <div class="st-value">${t.val != null ? t.val : '—'}<span class="st-unit">${t.val != null ? t.unit : ''}</span></div>
+        </div>`).join('');
+
+      const flagHTML = flags.map(f => {
+        const active = !!f.val;
+        const cls = active && f.danger ? 'danger' : (active ? 'ok' : '');
+        const col = active && f.danger ? 'var(--danger)' : (active ? 'var(--safe)' : 'var(--text-muted)');
+        return `<div class="sensor-tile ${active && f.danger ? 't-danger' : 't-ok'}" style="text-align:center">
+          <div class="st-label">${f.label}</div>
+          <div style="font-size:26px;margin-top:6px">${active ? (f.danger ? '🔴' : '✅') : '🟢'}</div>
+          <div style="font-size:12px;color:${col};margin-top:4px;font-weight:700">${active ? (f.danger ? 'ALERT' : 'YES') : 'Clear'}</div>
+        </div>`;
+      }).join('');
+
+      const alertsHTML = (m.alerts && m.alerts.length)
+        ? m.alerts.slice().reverse().map(a => `
+            <div class="modal-alert ${a.l}">
+              <span>${a.m}</span>
+              <span class="ma-ts">${a.ts.slice(11,19)}</span>
+            </div>`).join('')
+        : '<p style="color:var(--text-muted);font-size:13px">No recent alerts.</p>';
+
+      document.getElementById('modalBody').innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:16px;background:var(--bg-input);border-radius:var(--radius-md);">
+          <div style="font-size:40px">⛑️</div>
+          <div>
+            <div style="font-size:13px;color:var(--text-muted)">Zone: <strong style="color:var(--text-primary)">${escHtml(m.zone)}</strong> &nbsp;·&nbsp; Level: <strong style="color:var(--text-primary)">${escHtml(m.level)}</strong></div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Status: <strong class="status-pill ${m.status === 'ok' ? 'ok' : m.status === 'warn' ? 'warn' : (m.status === 'sos' ? 'sos' : 'danger')}" style="font-size:12px">${m.status.toUpperCase()}</strong> &nbsp; Last seen: <span class="mono" style="color:var(--text-secondary)">${m.last_seen ? m.last_seen.slice(0,19).replace('T',' ') : '—'}</span></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Sensor Readings</div>
+        <div class="sensor-grid">${tileHTML}${flagHTML}</div>
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px">Recent Alerts</div>
+        <div class="modal-alerts">${alertsHTML}</div>`;
+
+      document.getElementById('detailModal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('visible');
+    }
+    document.getElementById('detailModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // ── Threshold colour helpers ──────────────────────────────
+    function hrClass(v)    { if(v==null) return 't-info'; if(v>=120||v<=50) return 't-danger'; if(v>=100||v<=60) return 't-warn'; return 't-ok'; }
+    function spo2Class(v)  { if(v==null) return 't-info'; if(v<92) return 't-danger'; if(v<95) return 't-warn'; return 't-ok'; }
+    function btClass(v)    { if(v==null) return 't-info'; if(v>=39.0) return 't-danger'; if(v>=37.8) return 't-warn'; return 't-ok'; }
+    function coClass(v)    { if(v==null) return 't-info'; if(v>50) return 't-danger'; if(v>35) return 't-warn'; return 't-ok'; }
+    function h2sClass(v)   { if(v==null) return 't-info'; if(v>10) return 't-danger'; if(v>5) return 't-warn'; return 't-ok'; }
+    function ch4Class(v)   { if(v==null) return 't-info'; if(v>5.0) return 't-danger'; if(v>1.0) return 't-warn'; return 't-ok'; }
+    function o2Class(v)    { if(v==null) return 't-info'; if(v<19.5) return 't-danger'; if(v<20.0) return 't-warn'; return 't-ok'; }
+    function smokeClass(v) { if(v==null) return 't-info'; if(v>150) return 't-danger'; if(v>50) return 't-warn'; return 't-ok'; }
+    function atClass(v)    { if(v==null) return 't-info'; if(v>=40) return 't-danger'; if(v>=35) return 't-warn'; return 't-ok'; }
+
+    // ── Helpers ───────────────────────────────────────────────
+    function escHtml(s) {
+      return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) { return escHtml(s); }
+  </script>
+</body>
+</html>
