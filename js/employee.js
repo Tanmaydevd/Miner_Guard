@@ -96,7 +96,14 @@ function updateSensorReadings(device) {
     fallEl.className = 'value-big value-danger';
     fallCard.className = 'card status-danger';
   } else {
-    fallEl.textContent = 'Upright';
+    const ax_ = d.ax ?? 0, ay_ = d.ay ?? 0, az_ = d.az ?? 0;
+    let tilt = 'Upright';
+    if      (az_ >  0.9)  tilt = 'Flat (face up)';
+    else if (az_ < -0.9)  tilt = 'Upside Down';
+    else if (ax_ >  0.9)  tilt = 'Tilted Right';
+    else if (ax_ < -0.9)  tilt = 'Tilted Left';
+    else                  tilt = 'Angled';
+    fallEl.textContent = tilt;
     fallEl.className = 'value-big value-safe';
     fallCard.className = 'card status-safe';
   }
