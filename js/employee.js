@@ -67,11 +67,11 @@ function updateSensorReadings(device) {
   pushHistory('airtemp', d.airtemp);
 
   updateGauge('hrGauge', d.hr, 40, 140, hrStatus(d.hr));
-  setText('hrValue', fmt(d.hr, 0));
+  setText('hrValue', fmtBio(d.hr, 0));
   updateBadge('hrBadge', hrStatus(d.hr));
 
   updateGauge('spo2Gauge', d.spo2, 80, 100, spo2Status(d.spo2));
-  setText('spo2Value', fmt(d.spo2, 0));
+  setText('spo2Value', fmtBio(d.spo2, 0));
   updateBadge('spo2Badge', spo2Status(d.spo2));
 
   drawSparkline('hrSparkline', sparklines.hr, '#22c55e');
@@ -277,6 +277,12 @@ async function cancelSOS() {
 }
 
 function fmt(value, decimals = 0) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return '--';
+  return Number(value).toFixed(decimals);
+}
+
+// Bio sensors: -1 means sensor not ready / no finger
+function fmtBio(value, decimals = 0) {
   if (typeof value !== 'number' || Number.isNaN(value) || value < 0) return '--';
   return Number(value).toFixed(decimals);
 }
@@ -287,26 +293,26 @@ function setText(id, value) {
 }
 
 function hrStatus(v) {
-  if (typeof v !== 'number' || v < 0) return 'warning';
+  if (typeof v !== 'number' || v < 0) return 'na';
   if (v >= 120 || v <= 50) return 'danger';
   if (v >= 100 || v <= 60) return 'warning';
   return 'safe';
 }
 
 function spo2Status(v) {
-  if (typeof v !== 'number' || v < 0) return 'warning';
+  if (typeof v !== 'number' || v < 0) return 'na';
   return lowStatus(v, 95, 92);
 }
 
 function lowStatus(v, warn, danger) {
-  if (typeof v !== 'number') return 'warning';
+  if (typeof v !== 'number' || v < 0) return 'na';
   if (v < danger) return 'danger';
   if (v < warn) return 'warning';
   return 'safe';
 }
 
 function highStatus(v, warn, danger) {
-  if (typeof v !== 'number') return 'warning';
+  if (typeof v !== 'number' || v < 0) return 'na';
   if (v > danger) return 'danger';
   if (v > warn) return 'warning';
   return 'safe';
@@ -320,8 +326,9 @@ function tempStatus(v) {
 }
 
 function statusLabel(status) {
-  if (status === 'danger') return 'Critical';
+  if (status === 'danger')  return 'Critical';
   if (status === 'warning') return 'Warning';
+  if (status === 'na')      return 'N/A';
   return 'Normal';
 }
 

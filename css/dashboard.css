@@ -65,6 +65,8 @@
 .status-badge.safe { background:var(--safe-bg);color:var(--safe);border:1px solid var(--safe-border); }
 .status-badge.warning { background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border); }
 .status-badge.danger { background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border); }
+.status-badge.na { background:rgba(100,116,139,0.1);color:var(--text-muted);border:1px solid rgba(100,116,139,0.2); }
+.value-na { color:var(--text-muted); }
 .status-badge .badge-dot { width:6px;height:6px;border-radius:50%;background:currentColor; }
 
 /* Value Display */
