@@ -293,26 +293,26 @@ function setText(id, value) {
 }
 
 function hrStatus(v) {
-  if (typeof v !== 'number' || v < 0) return 'na';
+  if (typeof v !== 'number' || v < 0) return 'warning';
   if (v >= 120 || v <= 50) return 'danger';
   if (v >= 100 || v <= 60) return 'warning';
   return 'safe';
 }
 
 function spo2Status(v) {
-  if (typeof v !== 'number' || v < 0) return 'na';
+  if (typeof v !== 'number' || v < 0) return 'warning';
   return lowStatus(v, 95, 92);
 }
 
 function lowStatus(v, warn, danger) {
-  if (typeof v !== 'number' || v < 0) return 'na';
+  if (typeof v !== 'number' || v < 0) return 'warning';
   if (v < danger) return 'danger';
   if (v < warn) return 'warning';
   return 'safe';
 }
 
 function highStatus(v, warn, danger) {
-  if (typeof v !== 'number' || v < 0) return 'na';
+  if (typeof v !== 'number' || v < 0) return 'warning';
   if (v > danger) return 'danger';
   if (v > warn) return 'warning';
   return 'safe';
