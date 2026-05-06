@@ -277,7 +277,7 @@ async function cancelSOS() {
 }
 
 function fmt(value, decimals = 0) {
-  if (typeof value !== 'number' || Number.isNaN(value)) return '--';
+  if (typeof value !== 'number' || Number.isNaN(value) || value < 0) return '--';
   return Number(value).toFixed(decimals);
 }
 
@@ -287,13 +287,14 @@ function setText(id, value) {
 }
 
 function hrStatus(v) {
-  if (typeof v !== 'number') return 'warning';
+  if (typeof v !== 'number' || v < 0) return 'warning';
   if (v >= 120 || v <= 50) return 'danger';
   if (v >= 100 || v <= 60) return 'warning';
   return 'safe';
 }
 
 function spo2Status(v) {
+  if (typeof v !== 'number' || v < 0) return 'warning';
   return lowStatus(v, 95, 92);
 }
 
