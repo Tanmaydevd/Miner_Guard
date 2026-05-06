@@ -79,8 +79,7 @@ function updateSensorReadings(device) {
 
   updateGasCard('co', d.co, 60, highStatus(d.co, 35, 50));
   updateGasCard('ch4', d.ch4, 5, highStatus(d.ch4, 1, 5), 2);
-  updateGasCard('h2s', d.h2s, 15, highStatus(d.h2s, 5, 10));
-  updateGasCard('o2', d.o2, 23.5, lowStatus(d.o2, 20, 19.5), 1);
+  updateGasCard('h2s', typeof d.h2s === 'number' && d.h2s >= 0 ? d.h2s : 0, 15, highStatus(d.h2s, 5, 10));
   updateGasCard('smoke', d.smoke, 150, highStatus(d.smoke, 50, 150));
 
   updateSimpleCard('temp', d.airtemp, tempStatus(d.airtemp), 1);
@@ -122,8 +121,9 @@ function updateSensorReadings(device) {
 
 function setWaitingState(message = 'Waiting for ESP sensor data') {
   updateConnectionStatus(false);
-  ['hrValue', 'spo2Value', 'coValue', 'ch4Value', 'h2sValue', 'o2Value', 'smokeValue',
+  ['hrValue', 'spo2Value', 'coValue', 'ch4Value', 'smokeValue',
    'tempValue', 'depthValue', 'pressureValue'].forEach(id => setText(id, '--'));
+  setText('h2sValue', '0');
   setText('fallStatus', 'Waiting');
   setText('accelData', 'X:-- Y:-- Z:--');
   setText('locationZone', '--');
