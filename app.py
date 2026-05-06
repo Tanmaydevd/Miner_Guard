@@ -241,7 +241,7 @@ def evaluate(state, d):
 #   h = 44330 * (1 - (P/P0)^(1/5.255))   meters above P0
 # Underground, h is negative -> depth = -h.
 # ------------------------------------------------------------
-SURFACE_P_HPA = 1013.25   # adjust to actual surface reading at the mine
+SURFACE_P_HPA = 918.0   # Bengaluru ~920m elevation; set to actual surface reading
 
 def depth_from_pressure(p_hpa):
     if p_hpa is None or p_hpa <= 0:
