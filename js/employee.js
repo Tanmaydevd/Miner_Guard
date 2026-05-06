@@ -79,7 +79,8 @@ function updateSensorReadings(device) {
 
   updateGasCard('co', d.co, 60, highStatus(d.co, 35, 50));
   updateGasCard('ch4', d.ch4, 5, highStatus(d.ch4, 1, 5), 2);
-  updateGasCard('h2s', typeof d.h2s === 'number' && d.h2s >= 0 ? d.h2s : 0, 15, highStatus(d.h2s, 5, 10));
+  const h2sVal = (typeof d.h2s === 'number' && d.h2s >= 0) ? d.h2s : 0;
+  updateGasCard('h2s', h2sVal, 15, highStatus(h2sVal, 5, 10));
   updateGasCard('smoke', d.smoke, 150, highStatus(d.smoke, 50, 150));
 
   updateSimpleCard('temp', d.airtemp, tempStatus(d.airtemp), 1);
